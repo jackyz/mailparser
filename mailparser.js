@@ -236,7 +236,7 @@ MailParser.prototype.analyzeHeaders = function(headerObj, headers){
     headers.contentDisposition = parts.defaultValue || false;
 
     if(!headers.filename && parts.filename)
-        headers.filename = mime.parseMimeWords(parts.filename.replace(/^[\s"']+|[\s"']+$/g,"")).trim();
+        headers.filename = mime.parseMimeWords(parts.filename.replace(/^[\s"']+|[\s"']+$/g,"")).trim(); // '"
 
     headers.secondary = [];
     var keys = Object.keys(headerObj);
@@ -289,7 +289,7 @@ MailParser.prototype.parseBody = function(data){
                         this.waitFor++;
 
                         // TEXT
-                        if(this.body.headers.contentType.substr(0,"text/".length)=="text/"){
+                        if(this.body.headers.contentType.substr(0,"text/".length)=="text/" && !this.body.headers.contentDisposition){
                             this.body.ds = new DataStore("text", this.body.headers);
                             this.setUpDSCallback(this.body.headers);
                         }
