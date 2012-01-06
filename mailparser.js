@@ -30,7 +30,8 @@ MailParser = function(){
     this.bodyData = {bodyText:"", bodyHTML:"", bodyAlternate:[], attachments:[]};
 
     this.state = PARSE_HEADERS;
-}
+};
+
 sys.inherits(MailParser, EventEmitter);
 
 exports.MailParser = MailParser;
@@ -43,7 +44,7 @@ MailParser.prototype.feed = function(data){
     }else if(this.state == PARSE_BODY){
         data = this.parseBody(data);
     }
-}
+};
 
 MailParser.prototype.end = function(){
     if(this.headers.multipart && (this.waitFor || !this.receivedAll))
@@ -54,12 +55,12 @@ MailParser.prototype.end = function(){
     }
 
     this.emit("end");
-}
+};
 
 MailParser.prototype.parseHeaders = function(data){
-    var match;
     this.headerStr += data;
-    if(match=this.headerStr.match(/^([\s\S]*?\r\n)[ \t]*\r\n/)){
+    var match = this.headerStr.match(/^([\s\S]*?\r\n)[ \t]*\r\n/);
+    if(match){
         var remainder = this.headerStr.slice(match[0].length);
         this.headerStr = match[1];
         this.headerObj = mime.parseHeaders(this.headerStr);
@@ -71,7 +72,7 @@ MailParser.prototype.parseHeaders = function(data){
         this.parseBodyStart(remainder);
     }
     return data; // this makes no sense as far as I can tell, but leaving it in.
-}
+};
 
 MailParser.prototype.analyzeHeaders = function(headerObj, headers){
     var parts, headersUsed = [];
@@ -91,19 +92,19 @@ MailParser.prototype.analyzeHeaders = function(headerObj, headers){
     // charset
     headers.charset = parts.charset || "us-ascii";
     // Some mails incorrectly quote the charset. Let's deal with that.
-    headers.charset = headers.charset.replace(/"/g, '');
+    headers.charset = headers.charset.replace(/"/g, ''); // "
 
     // format=fixed|flowed (RFC2646)
     headers.format = parts.format && parts.format.toLowerCase() || "fixed";
 
     // filename
-    headers.filename = parts.name && mime.parseMimeWords(parts.name.replace(/^[\s"']+|[\s"']+$/g,"")).trim() || false;
+    headers.filename = parts.name && mime.parseMimeWords(parts.name.replace(/^[\s"']+|[\s"']+$/g,"")).trim() || false; // '
 
     // mime-boundary
     headers.multipart = false;
     headers.mimeBoundary = false;
     if(headers.contentType.substr(0,"multipart/".length)=="multipart/"){
-        headers.mimeBoundary = parts.boundary.replace(/^[\s"']+|[\s"']+$/g,"").trim();
+        headers.mimeBoundary = parts.boundary.replace(/^[\s"']+|[\s"']+$/g,"").trim(); // "'
         headers.multipart = true;
     }
 
@@ -181,9 +182,9 @@ MailParser.prototype.analyzeHeaders = function(headerObj, headers){
     // subject
     headersUsed.push("subject");
     if(headers.useMime){
-        headers.subject = mime.parseMimeWords(headerObj["subject"] && headerObj["subject"][0] || "");
+        headers.subject = mime.parseMimeWords(headerObj["subject"] && headerObj["subject"][0] || "");
     }else
-        headers.subject = headerObj["subject"] && headerObj["subject"][0] || "";
+        headers.subject = headerObj["subject"] && headerObj["subject"][0] || "";
 
     // priority
     headersUsed.push("x-priority");
@@ -199,8 +200,8 @@ MailParser.prototype.analyzeHeaders = function(headerObj, headers){
             headers.priority = 5;
         if(nr<3)
             headers.priority = 1;
-    }else if(headerObj["x-priority"] || headerObj["x-msmail-priority"]){
-        switch((headerObj["x-priority"] || headerObj["x-msmail-priority"])[0].toLowerCase().trim()){
+    }else if(headerObj["x-priority"] || headerObj["x-msmail-priority"]){
+        switch((headerObj["x-priority"] || headerObj["x-msmail-priority"])[0].toLowerCase().trim()){
             case "low":
                 headers.priority = 5;
                 break;
@@ -225,8 +226,6 @@ MailParser.prototype.analyzeHeaders = function(headerObj, headers){
         }
     }
 
-
-
     // content-disposition
     headersUsed.push("content-disposition");
     parts = {};
@@ -248,7 +247,7 @@ MailParser.prototype.analyzeHeaders = function(headerObj, headers){
             headers.secondary.push(row);
         }
     }
-}
+};
 
 MailParser.prototype.parseBodyStart = function(data){
     this.body = {
@@ -258,14 +257,14 @@ MailParser.prototype.parseBodyStart = function(data){
         headerObj: {},
         headers: {},
         ds: null
-    }
+    };
     this.parseBody(data);
-}
+};
 
 MailParser.prototype.parseBody = function(data){
 
     if(this.headers.multipart){
-        var pos = pos2 = 0, parts, pos3;
+        var pos = 0, pos2 = 0, parts, pos3;
         do{
             pos3=false;
             if(this.body.mimeContents){
@@ -342,7 +341,7 @@ MailParser.prototype.parseBody = function(data){
     }else{
         this.bodyData.bodyText += data;
     }
-}
+};
 
 MailParser.prototype.setUpDSCallback = function(headers){
 
@@ -393,7 +392,7 @@ MailParser.prototype.setUpDSCallback = function(headers){
             this.end();
         }
     }).bind(this));
-}
+};
 
 
 MailParser.prototype.setUpMPCallback = function(headers){
@@ -422,7 +421,7 @@ MailParser.prototype.setUpMPCallback = function(headers){
             this.end();
         }
     }).bind(this));
-}
+};
 
 MailParser.prototype.parseBodyEnd = function(){
 
@@ -447,9 +446,7 @@ MailParser.prototype.parseBodyEnd = function(){
 
     this.emit("body",this.bodyData);
     return false;
-}
-
-
+};
 
 // DataStore - load text into memory, put binary to Mongo GridStore
 // return a) text - fulltext, b) binary - key
@@ -457,9 +454,8 @@ function DataStore(type, headers){
     EventEmitter.call(this);
     this.type = type || "text";
     this.encoding = headers && headers.contentTransferEncoding || "7bit";
-    this.charset = headers && headers.charset.replace(/"/g, '') || "us-ascii";
+    this.charset = headers && headers.charset.replace(/"/g, '') || "us-ascii"; // "
     this.data = "";
-
     this.id = generateAttachmentId();
 
     this.stream = false;
@@ -477,8 +473,9 @@ function DataStore(type, headers){
         contentDisposition: headers.contentDisposition,
         contentId: headers.contentId,
         filename: headers.filename
-    }
+    };
 }
+
 sys.inherits(DataStore, EventEmitter);
 
 DataStore.prototype.feed = function(data){
@@ -488,23 +485,23 @@ DataStore.prototype.feed = function(data){
     }
     if(this.type=="text")this.feedText(data);
     if(this.type=="binary")this.feedBinary(data);
-}
+};
 
 DataStore.prototype.feedText = function(data){
     this.data += data;
-}
+};
 
 DataStore.prototype.feedBinary = function(data){
     this.stream.feed(data);
-}
+};
 
 DataStore.prototype.onStream = function(buffer){
-    this.emit("astream", this.id, buffer)
-}
+    this.emit("astream", this.id, buffer);
+};
 
 DataStore.prototype.onStreamEnd = function(){
     this.emit("end", {id:this.id, body:null});
-}
+};
 
 DataStore.prototype.end = function(){
     if(this.type=="text"){
@@ -518,7 +515,7 @@ DataStore.prototype.end = function(){
     }else{
         this.stream.end();
     }
-}
+};
 
 
 // base64 stream decoder
@@ -526,6 +523,7 @@ function Base64Stream(){
     EventEmitter.call(this);
     this.current = "";
 }
+
 sys.inherits(Base64Stream, EventEmitter);
 
 Base64Stream.prototype.feed = function(data){
@@ -533,16 +531,17 @@ Base64Stream.prototype.feed = function(data){
     this.current += data.replace(/[^\w+\/=]/g,'');
     this.emit("stream", new Buffer(this.current.substr(0, this.current.length - this.current.length % 4),"base64"));
     this.current = (remainder=this.current.length % 4)?this.current.substr(- remainder):"";
-}
+};
 
 Base64Stream.prototype.end = function(){
     if(this.current.length)
         this.emit("stream", new Buffer(this.current,"base64"));
     this.emit("end");
-}
+};
 
 
 var attachment_id_counter = 0;
+
 function generateAttachmentId(){
     return Date.now()+"-"+(++attachment_id_counter);
 }
@@ -613,4 +612,3 @@ function stripHTML(str){
     str = str.replace(/-®®®®-/g,"  ");
     return str.trim();
 }
-

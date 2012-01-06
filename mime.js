@@ -108,23 +108,23 @@ this.encodeMimeWord = function(str, encoding, charset){
  **/
 
 this.decodeMimeWord = function(str){
+
   var parts = str.split("?"),
       charset = parts && parts[1],
       encoding = parts && parts[2],
       text = parts && parts[3];
 
-
-  if(!charset || !encoding || !text)
-      return str;
+  if(!charset || !encoding || !text) return str;
+  var result;
   if(encoding.toUpperCase()=="Q"){
-      return this.decodeQuotedPrintable(text, true, charset);
+      result = this.decodeQuotedPrintable(text, true, charset);
+  } else if(encoding.toUpperCase()=="B"){
+      result = this.decodeBase64(text, charset);
+  } else {
+      result = text;
   }
-
-  if(encoding.toUpperCase()=="B"){
-      return this.decodeBase64(text);
-  }
-
-  return text;
+  // console.log("decodeMimeWord(%s) charset=%s encoding=%s text=%s :: result=%s", str , charset, encoding, text, result);
+  return result;
 }
 
 
